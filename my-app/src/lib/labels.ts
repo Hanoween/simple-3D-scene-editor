@@ -1,3 +1,1 @@
-export const LABELS: Record<string, string> = {
-
-}
+export const LABELS: Record<string, string> = {};

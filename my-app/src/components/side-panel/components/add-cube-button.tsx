@@ -1,5 +1,7 @@
 import { Button } from "antd";
 
-const AddCubeButton = () => <Button />
+const AddCubeButton = () => {
+  return <Button />;
+};
 
 export default AddCubeButton;
