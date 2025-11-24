@@ -71,7 +71,7 @@ const SidePanel = ({
   activityLog,
 }: Props) => {
   const activityLogChildren: MenuItem[] = activityLog.map((log) => ({
-    key: `activity-${log.id}`,
+    key: log.id,
     label: (
       <Space className={styles.activityLog} vertical size={0}>
         <Typography.Text

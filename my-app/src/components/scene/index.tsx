@@ -102,21 +102,35 @@ const SceneEditor = ({ ref }: Props) => {
 
     // AABB vs AABB intersection
     // source: 3D collision detection on https://developer.mozilla.org
-    for (const existingCube of cubes) {
-      const existingCubeDimension = (existingCube.geometry as BoxGeometry)
-        .parameters.width;
-      const existingCubeHalf = existingCubeDimension / 2;
+    let changed = true;
+    while (changed) {
+      changed = false;
 
-      const cubePosition = new Vector3(cube.position.x, cubeY, cube.position.z); // calculate new Y
+      for (const existingCube of cubes) {
+        const existingCubeDimension = (existingCube.geometry as BoxGeometry)
+          .parameters.width;
+        const existingCubeHalf = existingCubeDimension / 2;
 
-      const existingBox = makeCubeAABB(existingCube.position, existingCubeHalf);
-      const newBox = makeCubeAABB(cubePosition, cubeHalf);
+        const cubePosition = new Vector3(
+          cube.position.x,
+          cubeY,
+          cube.position.z
+        ); // calculate new Y
 
-      if (intersect(newBox, existingBox)) {
-        // push new cube just above this existing one
-        const aboveY = existingBox.maxY + cubeHalf;
-        if (aboveY > cubeY) {
-          cubeY = aboveY;
+        const existingBox = makeCubeAABB(
+          existingCube.position,
+          existingCubeHalf
+        );
+        const newBox = makeCubeAABB(cubePosition, cubeHalf);
+
+        if (intersect(newBox, existingBox)) {
+          // push new cube just above this existing one
+          const aboveY = existingBox.maxY + cubeHalf;
+          if (aboveY > cubeY) {
+            cubeY = aboveY;
+            changed = true;
+            break;
+          }
         }
       }
     }
