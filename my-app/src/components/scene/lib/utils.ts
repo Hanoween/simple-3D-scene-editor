@@ -58,8 +58,18 @@ export const initCamera = (camera: PerspectiveCamera) => {
   camera.lookAt(0, 0, 0);
 };
 
-export const initGUI = (gui: GUI, camera: PerspectiveCamera) => {
-  gui.add(camera.position, "z", 10, 200, 1).name("Proximity");
+export const initGUI = (
+  gui: GUI,
+  camera: PerspectiveCamera,
+  renderer: WebGLRenderer,
+  scene: Scene<Object3DEventMap>
+) => {
+  gui
+    .add(camera.position, "z", 10, 200, 1)
+    .name("Proximity")
+    .onChange(() => {
+      renderer.render(scene, camera);
+    });
   gui.domElement.style.zIndex = "100";
 };
 

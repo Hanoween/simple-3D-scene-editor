@@ -46,7 +46,6 @@ const styles = {
 const scene = new Scene();
 const ambientLight = new AmbientLight(CUSTOM_COLOURS.ambientLight, 0.5);
 const pointLight = new PointLight(CUSTOM_COLOURS.pointLight, 0.5);
-const gui = new GUI();
 const camera = new PerspectiveCamera(45, 1, 0.1, 1000);
 
 export interface SceneHandleRef {
@@ -187,6 +186,7 @@ const SceneEditor = ({ ref }: Props) => {
       const width = canvas.clientWidth;
       const height = canvas.clientHeight;
 
+      const gui = new GUI();
       const planeGeometry = new PlaneGeometry(width * 0.015, height * 0.015);
       const plane = new Mesh(
         planeGeometry,
@@ -203,7 +203,7 @@ const SceneEditor = ({ ref }: Props) => {
       initScene(scene);
       initLight(pointLight);
       initCamera(camera);
-      initGUI(gui, camera);
+      initGUI(gui, camera, renderer, scene);
       initPlane(plane);
       initRenderer(renderer, width, height);
 

@@ -1,4 +1,8 @@
-import { DeleteOutlined, PlusCircleOutlined } from "@ant-design/icons";
+import {
+  ClockCircleOutlined,
+  DeleteOutlined,
+  PlusCircleOutlined,
+} from "@ant-design/icons";
 import { css } from "@emotion/css";
 import { Menu, type MenuProps } from "antd";
 
@@ -45,6 +49,12 @@ const SidePanel = ({ onAddCube, onRemoveCube }: Props) => {
       label: "Remove a cube",
       icon: <DeleteOutlined />,
       onClick: onRemoveCube,
+    },
+    {
+      key: "activity-log",
+      label: "Activity log",
+      icon: <ClockCircleOutlined />,
+      children: [],
     },
   ];
 
