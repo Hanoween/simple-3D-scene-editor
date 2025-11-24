@@ -129,7 +129,7 @@ const SceneEditor = ({ ref }: Props) => {
     renderer.render(scene, camera);
   }, [cubes]);
 
-  const handleRemoveCube = () => {
+  const handleRemoveCube = useCallback(() => {
     const renderer = rendererRef.current;
     if (!renderer) {
       throw new Error("Error while removing cube.");
@@ -139,15 +139,37 @@ const SceneEditor = ({ ref }: Props) => {
       return;
     }
 
-    // select a random cube
-    const index = Math.floor(Math.random() * cubes.length);
-    const cubeToRemove = cubes[index];
+    // find cubes that don't have another cube on top of them
+    // this it to ensure that no cube is "flying"
+    const removable = cubes.filter((cube) => {
+      const cubeSize = (cube.geometry as BoxGeometry).parameters.width;
+      const cubeHalf = cubeSize / 2;
+      const box = makeCubeAABB(cube.position, cubeHalf);
+
+      const hasCubeAbove = cubes.some((otherCube) => {
+        if (otherCube === cube) return false;
+
+        const otherSize = (otherCube.geometry as BoxGeometry).parameters.width;
+        const otherHalf = otherSize / 2;
+        const otherBox = makeCubeAABB(otherCube.position, otherHalf);
+
+        return (
+          intersect(box, otherBox) && otherCube.position.y > cube.position.y
+        );
+      });
+
+      return !hasCubeAbove;
+    });
+
+    // select a random cube among those with no cube on top
+    const index = Math.floor(Math.random() * removable.length);
+    const cubeToRemove = removable[index];
 
     scene.remove(cubeToRemove);
     renderer.render(scene, camera);
 
-    setCubes((prevCubes) => prevCubes.filter((_, i) => i !== index));
-  };
+    setCubes((prevCubes) => prevCubes.filter((cube) => cube !== cubeToRemove));
+  }, [cubes]);
 
   // attach methods to the ref so we can call functions in parent component
   // allows encapsulation
