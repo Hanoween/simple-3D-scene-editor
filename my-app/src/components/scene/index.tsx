@@ -129,7 +129,25 @@ const SceneEditor = ({ ref }: Props) => {
     renderer.render(scene, camera);
   }, [cubes]);
 
-  const handleRemoveCube = () => {};
+  const handleRemoveCube = () => {
+    const renderer = rendererRef.current;
+    if (!renderer) {
+      throw new Error("Error while removing cube.");
+    }
+
+    if (cubes.length === 0) {
+      return;
+    }
+
+    // select a random cube
+    const index = Math.floor(Math.random() * cubes.length);
+    const cubeToRemove = cubes[index];
+
+    scene.remove(cubeToRemove);
+    renderer.render(scene, camera);
+
+    setCubes((prevCubes) => prevCubes.filter((_, i) => i !== index));
+  };
 
   // attach methods to the ref so we can call functions in parent component
   // allows encapsulation

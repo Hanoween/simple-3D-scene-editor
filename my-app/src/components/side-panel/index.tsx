@@ -1,4 +1,4 @@
-import { PlusCircleOutlined } from "@ant-design/icons";
+import { DeleteOutlined, PlusCircleOutlined } from "@ant-design/icons";
 import { css } from "@emotion/css";
 import { Menu, type MenuProps } from "antd";
 
@@ -29,15 +29,22 @@ type MenuItem = Required<MenuProps>["items"][number];
 
 interface Props {
   onAddCube: () => void;
+  onRemoveCube: () => void;
 }
 
-const SidePanel = ({ onAddCube }: Props) => {
+const SidePanel = ({ onAddCube, onRemoveCube }: Props) => {
   const items: MenuItem[] = [
     {
       key: "add-cube",
-      label: "Add cube",
+      label: "Add a cube",
       icon: <PlusCircleOutlined />,
       onClick: onAddCube,
+    },
+    {
+      key: "remove-cube",
+      label: "Remove a cube",
+      icon: <DeleteOutlined />,
+      onClick: onRemoveCube,
     },
   ];
 

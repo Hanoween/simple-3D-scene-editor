@@ -19,10 +19,14 @@ function App() {
     sceneRef.current?.addCube();
   };
 
+  const handleRemoveCube = () => {
+    sceneRef.current?.removeCube();
+  };
+
   return (
     <Layout className={styles.container}>
       <Layout.Sider width={180}>
-        <SidePanel onAddCube={handleAddCube} />
+        <SidePanel onAddCube={handleAddCube} onRemoveCube={handleRemoveCube} />
       </Layout.Sider>
       <Layout.Content>
         <Scene ref={sceneRef} />
