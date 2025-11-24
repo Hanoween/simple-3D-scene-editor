@@ -1,18 +1,25 @@
 import { css } from "@emotion/css";
 import { GUI } from "dat.gui";
-import { useEffect, useRef } from "react";
+import {
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 import {
   AmbientLight,
   BoxGeometry,
   DoubleSide,
   Mesh,
-  MeshLambertMaterial,
   MeshPhongMaterial,
   PerspectiveCamera,
   PlaneGeometry,
   PointLight,
   Scene,
+  Vector3,
   WebGLRenderer,
+  type Object3DEventMap,
 } from "three";
 
 import {
@@ -27,35 +34,102 @@ import { CUSTOM_COLOURS } from "../../lib/colours";
 
 const styles = {
   canvas: css`
-    position: block;
-    width: 100vw;
-    height: 100vh;
+    display: block;
+    width: 100%;
+    height: 100%;
   `,
 };
 
-const SceneEditor = () => {
+// singleton instances
+const scene = new Scene();
+const ambientLight = new AmbientLight(CUSTOM_COLOURS.ambientLight, 0.5);
+const pointLight = new PointLight(CUSTOM_COLOURS.pointLight, 0.5);
+const gui = new GUI();
+const camera = new PerspectiveCamera(45, 1, 0.1, 1000);
+
+export interface SceneHandleRef {
+  addCube: () => void;
+  removeCube: () => void;
+}
+
+interface Props {
+  ref: React.RefObject<SceneHandleRef | null>;
+}
+
+const SceneEditor = ({ ref }: Props) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const rendererRef = useRef<WebGLRenderer | null>(null);
+  const planeRef = useRef<Mesh<
+    PlaneGeometry,
+    MeshPhongMaterial,
+    Object3DEventMap
+  > | null>(null);
+  const [cubes, setCubes] = useState<Mesh[]>([]);
 
-  const width = window.innerWidth;
-  const height = window.innerHeight;
+  const handleAddCube = useCallback(() => {
+    const renderer = rendererRef.current;
+    const plane = planeRef.current;
 
-  const scene = new Scene();
-  const ambientLight = new AmbientLight(CUSTOM_COLOURS.ambientLight, 0.5);
-  const pointLight = new PointLight(CUSTOM_COLOURS.pointLight, 0.5);
-  const gui = new GUI();
-  const camera = new PerspectiveCamera(45, width / height, 0.1, 1000);
-  const planeGeometry = new PlaneGeometry(22, 22);
-  const plane = new Mesh(
-    planeGeometry,
-    new MeshPhongMaterial({ color: CUSTOM_COLOURS.plane, side: DoubleSide })
-  );
+    if (!renderer || !plane) {
+      throw new Error("Error while adding cube.");
+    }
 
+    const cubeSize = Math.ceil(Math.random() * 3);
+    const cubeGeometry = new BoxGeometry(cubeSize, cubeSize, cubeSize);
+    const cubeMaterial = new MeshPhongMaterial({
+      color: Math.random() * 0xffffff,
+    });
+    const cube = new Mesh(cubeGeometry, cubeMaterial);
+    cube.castShadow = true;
+
+    // choose a coordinate on the plane to drop off the cube
+    const planeCoordinates = plane.geometry.parameters;
+    const viableWidthHalf = planeCoordinates.width / 2 - cubeSize / 2; // subtract half of cube length to avoid overflow
+    const viableHeightHalf = planeCoordinates.height / 2 - cubeSize / 2;
+    const selectedPlaneX = (Math.random() * 2 - 1) * viableWidthHalf;
+    const selectedPlaneY = (Math.random() * 2 - 1) * viableHeightHalf;
+    const localPoint = new Vector3(selectedPlaneX, selectedPlaneY, 0);
+
+    // coordinate on the plane relative to the canvas
+    const worldPoint = plane.localToWorld(localPoint);
+
+    cube.position.copy(worldPoint);
+    cube.position.y += cubeSize / 2; // elevate cube to avoid collision with plane
+
+    setCubes((prevCubes) => [...prevCubes, cube]);
+    scene.add(cube);
+    renderer.render(scene, camera);
+  }, []);
+
+  const handleRemoveCube = () => {};
+
+  // attach methods to the ref so we can call functions in parent component
+  // allows encapsulation
+  useImperativeHandle(ref, () => ({
+    addCube: handleAddCube,
+    removeCube: handleRemoveCube,
+  }));
+
+  // paint the canvas
   useEffect(() => {
-    if (canvasRef.current) {
+    const canvas = canvasRef.current;
+    const container = canvas?.parentElement;
+
+    if (canvas && container) {
+      const width = canvas.clientWidth;
+      const height = canvas.clientHeight;
+
+      const planeGeometry = new PlaneGeometry(width * 0.015, height * 0.015);
+      const plane = new Mesh(
+        planeGeometry,
+        new MeshPhongMaterial({ color: CUSTOM_COLOURS.plane, side: DoubleSide })
+      );
       const renderer = new WebGLRenderer({
-        canvas: canvasRef.current,
+        canvas,
         antialias: true,
       });
+      rendererRef.current = renderer;
+      planeRef.current = plane;
 
       // initiate attributes of elements that are part of the scene
       initScene(scene);
@@ -75,15 +149,20 @@ const SceneEditor = () => {
 
       // update scene on window resize
       const handleResize = () => {
-        const newWidth = window.innerWidth;
-        const newHeight = window.innerHeight;
+        const newWidth = container.clientWidth;
+        const newHeight = container?.clientHeight;
 
         camera.aspect = newWidth / newHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(newWidth, newHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        plane.geometry = new PlaneGeometry(newWidth * 0.015, newHeight * 0.015);
+
         renderer.render(scene, camera);
       };
+
+      handleResize();
 
       window.addEventListener("resize", handleResize);
       return () => {

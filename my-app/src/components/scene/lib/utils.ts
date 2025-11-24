@@ -33,6 +33,7 @@ export const initCamera = (camera: PerspectiveCamera) => {
 
 export const initGUI = (gui: GUI, camera: PerspectiveCamera) => {
   gui.add(camera.position, "z", 10, 200, 1).name("Proximity");
+  gui.domElement.style.zIndex = '100';
 };
 
 export const initPlane = (

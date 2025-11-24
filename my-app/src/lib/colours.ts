@@ -4,4 +4,6 @@ export const CUSTOM_COLOURS: Record<string, string> = {
   ambientLight: "#ffffff",
   pointLight: "#ffffff",
   plane: "#c5cbd4",
+  menuItemBg: "#4287f5",
+  menuItemText: "#ffffff",
 } as const;
