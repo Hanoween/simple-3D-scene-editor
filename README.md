@@ -11,7 +11,7 @@ A small React + three.js app that lets you add and remove cubes in a 3D scene, w
 
 - **Remove cubes safely**
 
-  - Removes a random cube that has no other cube on top of it (no “floating” cubes)
+  - Removes a random cube that has no other cube on top of it
 
 - **Activity log**
 
@@ -46,9 +46,9 @@ A small React + three.js app that lets you add and remove cubes in a 3D scene, w
 
 2. Start the development server (depending on your setup, for example):
 
-    ```
-    npm run dev
-    ```
+   ```
+   npm run dev
+   ```
 
 3. Open the app in your browser (usually http://localhost:3000 or http://localhost:5173).
 
