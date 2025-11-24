@@ -42,6 +42,16 @@ const styles = {
   `,
 };
 
+const LOCAL_STORAGE_KEY = "scene-editor-cubes";
+
+type SerializedCube = {
+  size: number;
+  x: number;
+  y: number;
+  z: number;
+  color: number;
+};
+
 // singleton instances
 const scene = new Scene();
 const ambientLight = new AmbientLight(CUSTOM_COLOURS.ambientLight, 0.5);
@@ -58,6 +68,7 @@ interface Props {
 }
 
 const SceneEditor = ({ ref }: Props) => {
+  const hasRunSaveOnceRef = useRef(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rendererRef = useRef<WebGLRenderer | null>(null);
   const planeRef = useRef<Mesh<
@@ -65,7 +76,9 @@ const SceneEditor = ({ ref }: Props) => {
     MeshPhongMaterial,
     Object3DEventMap
   > | null>(null);
-  const [cubes, setCubes] = useState<Mesh[]>([]);
+  const [cubes, setCubes] = useState<Mesh<BoxGeometry, MeshPhongMaterial>[]>(
+    []
+  );
 
   const handleAddCube = useCallback((): Vector3 => {
     const renderer = rendererRef.current;
@@ -107,8 +120,7 @@ const SceneEditor = ({ ref }: Props) => {
       changed = false;
 
       for (const existingCube of cubes) {
-        const existingCubeDimension = (existingCube.geometry as BoxGeometry)
-          .parameters.width;
+        const existingCubeDimension = existingCube.geometry.parameters.width;
         const existingCubeHalf = existingCubeDimension / 2;
 
         const cubePosition = new Vector3(
@@ -157,14 +169,14 @@ const SceneEditor = ({ ref }: Props) => {
     // find cubes that don't have another cube on top of them
     // this it to ensure that no cube is "flying"
     const removable = cubes.filter((cube) => {
-      const cubeSize = (cube.geometry as BoxGeometry).parameters.width;
+      const cubeSize = cube.geometry.parameters.width;
       const cubeHalf = cubeSize / 2;
       const box = makeCubeAABB(cube.position, cubeHalf);
 
       const hasCubeAbove = cubes.some((otherCube) => {
         if (otherCube === cube) return false;
 
-        const otherSize = (otherCube.geometry as BoxGeometry).parameters.width;
+        const otherSize = otherCube.geometry.parameters.width;
         const otherHalf = otherSize / 2;
         const otherBox = makeCubeAABB(otherCube.position, otherHalf);
 
@@ -230,6 +242,32 @@ const SceneEditor = ({ ref }: Props) => {
       scene.add(pointLight);
       scene.add(plane);
 
+      // retrieve cubes from local storage to paint the scene
+      const savedCubes = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (savedCubes) {
+        const parsedCubes: SerializedCube[] = JSON.parse(savedCubes);
+        const loadedCubes: Mesh<BoxGeometry, MeshPhongMaterial>[] = [];
+
+        for (const cubeData of parsedCubes) {
+          const cubeGeometry = new BoxGeometry(
+            cubeData.size,
+            cubeData.size,
+            cubeData.size
+          );
+          const cubeMaterial = new MeshPhongMaterial({
+            color: cubeData.color,
+          });
+
+          const cube = new Mesh(cubeGeometry, cubeMaterial);
+          cube.castShadow = true;
+          cube.position.set(cubeData.x, cubeData.y, cubeData.z);
+
+          scene.add(cube);
+          loadedCubes.push(cube);
+        }
+        setCubes(loadedCubes);
+      }
+
       // paint the scene
       renderer.render(scene, camera);
 
@@ -255,9 +293,29 @@ const SceneEditor = ({ ref }: Props) => {
         window.removeEventListener("resize", handleResize);
         gui.destroy();
         renderer.dispose();
+        scene.clear();
       };
     }
   }, []);
+
+  useEffect(() => {
+    // skip first time to avoid overwriting local storage with []
+    if (!hasRunSaveOnceRef.current) {
+      hasRunSaveOnceRef.current = true;
+      return;
+    }
+
+    // store each cube in the local storage
+    const serialized: SerializedCube[] = cubes.map((cube) => {
+      const size = cube.geometry.parameters.width;
+      const { x, y, z } = cube.position;
+      const color = cube.material.color.getHex();
+
+      return { size, x, y, z, color };
+    });
+
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(serialized));
+  }, [cubes]);
 
   return <canvas className={styles.canvas} ref={canvasRef} />;
 };
