@@ -1,9 +1,9 @@
 import { css } from "@emotion/css";
 import { Layout } from "antd";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 import Scene, { type SceneHandleRef } from "./components/scene";
-import SidePanel from "./components/side-panel";
+import SidePanel, { type ActivityLogEntry } from "./components/side-panel";
 
 const styles = {
   container: css`
@@ -14,19 +14,55 @@ const styles = {
 
 function App() {
   const sceneRef = useRef<SceneHandleRef | null>(null);
+  const [activityLog, setActivityLog] = useState<ActivityLogEntry[]>([]);
+
+  const addLogEntry = (description: string) => {
+    const entry: ActivityLogEntry = {
+      id: Date.now(),
+      timestamp: new Date().toLocaleString(),
+      description,
+    };
+
+    setActivityLog((prev) => [entry, ...prev]);
+  };
 
   const handleAddCube = () => {
-    sceneRef.current?.addCube();
+    const position = sceneRef.current?.addCube();
+
+    if (!position) {
+      throw new Error("Position undefined");
+    }
+
+    addLogEntry(
+      `Added a cube at (${position.x.toFixed(2)}, ${position.y.toFixed(
+        2
+      )}, ${position.z.toFixed(2)})`
+    );
   };
 
   const handleRemoveCube = () => {
-    sceneRef.current?.removeCube();
+    const position = sceneRef.current?.removeCube();
+
+    if (position === undefined) {
+      throw new Error("Position undefined");
+    }
+    if (position) {
+      addLogEntry(
+        `Removed a cube at (${position.x.toFixed(2)}, ${position.y.toFixed(
+          2
+        )}, ${position.z.toFixed(2)})`
+      );
+    }
   };
 
   return (
     <Layout className={styles.container}>
-      <Layout.Sider width={180}>
-        <SidePanel onAddCube={handleAddCube} onRemoveCube={handleRemoveCube} />
+      <Layout.Sider width={300}>
+        <SidePanel
+          onAddCube={handleAddCube}
+          onRemoveCube={handleRemoveCube}
+          activityLog={activityLog}
+        />
       </Layout.Sider>
       <Layout.Content>
         <Scene ref={sceneRef} />

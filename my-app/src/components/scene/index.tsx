@@ -49,8 +49,8 @@ const pointLight = new PointLight(CUSTOM_COLOURS.pointLight, 0.5);
 const camera = new PerspectiveCamera(45, 1, 0.1, 1000);
 
 export interface SceneHandleRef {
-  addCube: () => void;
-  removeCube: () => void;
+  addCube: () => Vector3;
+  removeCube: () => Vector3 | null;
 }
 
 interface Props {
@@ -67,7 +67,7 @@ const SceneEditor = ({ ref }: Props) => {
   > | null>(null);
   const [cubes, setCubes] = useState<Mesh[]>([]);
 
-  const handleAddCube = useCallback(() => {
+  const handleAddCube = useCallback((): Vector3 => {
     const renderer = rendererRef.current;
     const plane = planeRef.current;
 
@@ -126,16 +126,18 @@ const SceneEditor = ({ ref }: Props) => {
 
     scene.add(cube);
     renderer.render(scene, camera);
+
+    return cube.position;
   }, [cubes]);
 
-  const handleRemoveCube = useCallback(() => {
+  const handleRemoveCube = useCallback((): Vector3 | null => {
     const renderer = rendererRef.current;
     if (!renderer) {
       throw new Error("Error while removing cube.");
     }
 
     if (cubes.length === 0) {
-      return;
+      return null;
     }
 
     // find cubes that don't have another cube on top of them
@@ -168,6 +170,8 @@ const SceneEditor = ({ ref }: Props) => {
     renderer.render(scene, camera);
 
     setCubes((prevCubes) => prevCubes.filter((cube) => cube !== cubeToRemove));
+
+    return cubeToRemove.position;
   }, [cubes]);
 
   // attach methods to the ref so we can call functions in parent component

@@ -4,7 +4,7 @@ import {
   PlusCircleOutlined,
 } from "@ant-design/icons";
 import { css } from "@emotion/css";
-import { Menu, type MenuProps } from "antd";
+import { Menu, Space, Typography, type MenuProps } from "antd";
 
 import { CUSTOM_COLOURS } from "../../lib/colours";
 
@@ -13,8 +13,10 @@ const styles = {
     width: 100%;
     height: 100%;
     z-index: 100;
+    overflow-y: auto;
 
-    .ant-menu-item {
+    .ant-menu-item,
+    .ant-menu-submenu-title {
       width: 100%;
       margin: 0;
       border-radius: 0;
@@ -26,17 +28,58 @@ const styles = {
       ):hover {
       background: ${CUSTOM_COLOURS.menuItemBg};
     }
+
+    .ant-menu-sub .ant-menu-item {
+      height: 70px;
+      cursor: default;
+    }
+  `,
+
+  activityLog: css`
+    background-color: transparent;
+    height: 60px;
+
+    .ant-space-item {
+      height: 20px;
+    }
+  `,
+
+  logTypography: css`
+    color: ${CUSTOM_COLOURS.menuItemText};
   `,
 };
 
 type MenuItem = Required<MenuProps>["items"][number];
+export type ActivityLogEntry = {
+  id: number;
+  timestamp: string;
+  description: string;
+};
 
 interface Props {
   onAddCube: () => void;
   onRemoveCube: () => void;
+  activityLog: ActivityLogEntry[];
 }
 
-const SidePanel = ({ onAddCube, onRemoveCube }: Props) => {
+const SidePanel = ({ onAddCube, onRemoveCube, activityLog }: Props) => {
+  const activityLogChildren: MenuItem[] = activityLog.map((log) => ({
+    key: `activity-${log.id}`,
+    label: (
+      <Space className={styles.activityLog} vertical size={0}>
+        <Typography.Text
+          className={styles.logTypography}
+          style={{ fontSize: 11, opacity: 0.75 }}
+        >
+          {log.timestamp}
+        </Typography.Text>
+        <Typography.Text className={styles.logTypography}>
+          {log.description}
+        </Typography.Text>
+      </Space>
+    ),
+  }));
+
   const items: MenuItem[] = [
     {
       key: "add-cube",
@@ -54,7 +97,7 @@ const SidePanel = ({ onAddCube, onRemoveCube }: Props) => {
       key: "activity-log",
       label: "Activity log",
       icon: <ClockCircleOutlined />,
-      children: [],
+      children: activityLogChildren,
     },
   ];
 
