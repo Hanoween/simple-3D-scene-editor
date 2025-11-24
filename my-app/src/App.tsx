@@ -55,12 +55,17 @@ function App() {
     }
   };
 
+  const handleClearActivityLog = () => {
+    setActivityLog([]);
+  };
+
   return (
     <Layout className={styles.container}>
-      <Layout.Sider width={300}>
+      <Layout.Sider width={340}>
         <SidePanel
           onAddCube={handleAddCube}
           onRemoveCube={handleRemoveCube}
+          onClearActivityLog={handleClearActivityLog}
           activityLog={activityLog}
         />
       </Layout.Sider>

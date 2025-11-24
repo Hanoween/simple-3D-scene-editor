@@ -1,5 +1,6 @@
 import {
   ClockCircleOutlined,
+  CloseCircleOutlined,
   DeleteOutlined,
   PlusCircleOutlined,
 } from "@ant-design/icons";
@@ -59,10 +60,16 @@ export type ActivityLogEntry = {
 interface Props {
   onAddCube: () => void;
   onRemoveCube: () => void;
+  onClearActivityLog: () => void;
   activityLog: ActivityLogEntry[];
 }
 
-const SidePanel = ({ onAddCube, onRemoveCube, activityLog }: Props) => {
+const SidePanel = ({
+  onAddCube,
+  onRemoveCube,
+  onClearActivityLog,
+  activityLog,
+}: Props) => {
   const activityLogChildren: MenuItem[] = activityLog.map((log) => ({
     key: `activity-${log.id}`,
     label: (
@@ -92,6 +99,12 @@ const SidePanel = ({ onAddCube, onRemoveCube, activityLog }: Props) => {
       label: "Remove a cube",
       icon: <DeleteOutlined />,
       onClick: onRemoveCube,
+    },
+    {
+      key: "clear-activity",
+      label: "Clear activity",
+      icon: <CloseCircleOutlined />,
+      onClick: onClearActivityLog,
     },
     {
       key: "activity-log",
