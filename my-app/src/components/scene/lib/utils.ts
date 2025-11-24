@@ -5,6 +5,7 @@ import {
   MeshPhongMaterial,
   PerspectiveCamera,
   PlaneGeometry,
+  Vector3,
   WebGLRenderer,
   type Object3DEventMap,
   type PointLight,
@@ -12,6 +13,32 @@ import {
 } from "three";
 
 import { CUSTOM_COLOURS } from "../../../lib/colours";
+
+type AABB = {
+  minX: number;
+  maxX: number;
+  minY: number;
+  maxY: number;
+  minZ: number;
+  maxZ: number;
+};
+
+export const intersect = (a: AABB, b: AABB) =>
+  a.minX <= b.maxX &&
+  a.maxX >= b.minX &&
+  a.minY <= b.maxY &&
+  a.maxY >= b.minY &&
+  a.minZ <= b.maxZ &&
+  a.maxZ >= b.minZ;
+
+export const makeCubeAABB = (center: Vector3, halfSize: number): AABB => ({
+  minX: center.x - halfSize,
+  maxX: center.x + halfSize,
+  minY: center.y - halfSize,
+  maxY: center.y + halfSize,
+  minZ: center.z - halfSize,
+  maxZ: center.z + halfSize,
+});
 
 export const initScene = (scene: Scene<Object3DEventMap>) => {
   scene.background = new Color(CUSTOM_COLOURS.scene);
@@ -33,7 +60,7 @@ export const initCamera = (camera: PerspectiveCamera) => {
 
 export const initGUI = (gui: GUI, camera: PerspectiveCamera) => {
   gui.add(camera.position, "z", 10, 200, 1).name("Proximity");
-  gui.domElement.style.zIndex = '100';
+  gui.domElement.style.zIndex = "100";
 };
 
 export const initPlane = (
